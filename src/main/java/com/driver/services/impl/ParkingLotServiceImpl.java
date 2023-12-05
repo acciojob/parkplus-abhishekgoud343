@@ -9,6 +9,7 @@ import com.driver.services.ParkingLotService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -61,14 +62,21 @@ public class ParkingLotServiceImpl implements ParkingLotService {
 
     @Override
     public Spot updateSpot(int parkingLotId, int spotId, int pricePerHour) {
-        Optional<Spot> spotOptional = spotRepository1.findById(spotId);
-        if (!spotOptional.isPresent())
-            return null;
-        Spot spot = spotOptional.get();
-
-        spot.setPricePerHour(pricePerHour);
-
-        return spotRepository1.save(spot);
+        Optional<ParkingLot> optionalParkingLot=parkingLotRepository1.findById(parkingLotId);
+        if(optionalParkingLot.isPresent()){
+            List<Spot> spotList=optionalParkingLot.get().getSpotList();
+            Optional<Spot> optionalSpot=spotRepository1.findById(spotId);
+            if(optionalSpot.isPresent()){
+                if(spotList.contains(optionalSpot.get())){
+                    Spot spot=optionalSpot.get();
+                    spot.setOccupied(false);
+                    spot.setParkingLot(optionalParkingLot.get());
+                    spot.setPricePerHour(pricePerHour);
+                    spotRepository1.save(spot);
+                }
+            }
+        }
+        return new Spot();
     }
 
     @Override
