@@ -9,44 +9,39 @@ import com.driver.services.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 public class PaymentServiceImpl implements PaymentService {
     @Autowired
     ReservationRepository reservationRepository2;
+
     @Autowired
     PaymentRepository paymentRepository2;
 
     @Override
     public Payment pay(Integer reservationId, int amountSent, String mode) throws Exception {
-       Optional<Reservation> reservationOptional = reservationRepository2.findById(reservationId);
+        Reservation reservation = reservationRepository2.findById(reservationId).orElseThrow(() -> new Exception("Reservation not found"));
 
         Payment payment = new Payment();
-        if (reservationOptional.isPresent()) {
-            Reservation reservation = reservationOptional.get();
 
-            if (mode != null) {
-                if (mode.equalsIgnoreCase("cash"))
-                    payment.setPaymentMode(PaymentMode.CASH);
-                else if (mode.equalsIgnoreCase("card"))
-                    payment.setPaymentMode(PaymentMode.CARD);
-                else if (mode.equalsIgnoreCase("upi"))
-                    payment.setPaymentMode(PaymentMode.UPI);
-                else
-                    return payment;
-            }
+        int bill = reservation.getSpot().getPricePerHour() * reservation.getNumberOfHours();
+        if (amountSent < bill)
+            throw new Exception("Insufficient Amount");
 
-            if (amountSent >= reservation.getSpot().getPricePerHour() * reservation.getNumberOfHours())
-                payment.setPaymentCompleted(true);
-            else
-                return payment;
+        if (mode.equalsIgnoreCase("cash"))
+            payment.setPaymentMode(PaymentMode.CASH);
+        else if (mode.equalsIgnoreCase("card"))
+            payment.setPaymentMode(PaymentMode.CARD);
+        else if (mode.equalsIgnoreCase("upi"))
+            payment.setPaymentMode(PaymentMode.UPI);
+        else
+            throw new Exception("Payment mode not detected");
 
-            payment.setReservation(reservation);
-            reservation.setPayment(payment);
+        payment.setPaymentCompleted(true);
 
-            reservationRepository2.save(reservation);
-        }
+        payment.setReservation(reservation);
+        reservation.setPayment(payment);
+
+        reservationRepository2.save(reservation);
 
         return payment;
     }

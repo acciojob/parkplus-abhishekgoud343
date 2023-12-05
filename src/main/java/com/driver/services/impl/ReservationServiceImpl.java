@@ -2,13 +2,15 @@ package com.driver.services.impl;
 
 import com.driver.model.*;
 import com.driver.repository.ParkingLotRepository;
-import com.driver.repository.ReservationRepository;
 import com.driver.repository.SpotRepository;
 import com.driver.repository.UserRepository;
 import com.driver.services.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.util.Optional;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 @Service
 public class ReservationServiceImpl implements ReservationService {
@@ -18,29 +20,21 @@ public class ReservationServiceImpl implements ReservationService {
     @Autowired
     SpotRepository spotRepository3;
 
-    @Autowired
-    ReservationRepository reservationRepository3;
+//    @Autowired
+//    ReservationRepository reservationRepository3;
 
     @Autowired
     ParkingLotRepository parkingLotRepository3;
 
     @Override
-    public Reservation reserveSpot(Integer userId, Integer parkingLotId, Integer timeInHours, Integer numberOfWheels) {
-        Optional<User> userOptional = userRepository3.findById(userId);
-        Optional<ParkingLot> parkingLotOptional = parkingLotRepository3.findById(parkingLotId);
+    public Reservation reserveSpot(Integer userId, Integer parkingLotId, Integer timeInHours, Integer numberOfWheels) throws Exception {
+        User user = userRepository3.findById(userId).orElseThrow(() -> new Exception("Cannot make reservation"));
+        ParkingLot parkingLot = parkingLotRepository3.findById(parkingLotId).orElseThrow(() -> new Exception("Cannot maker reservation"));
 
-        if (!userOptional.isPresent() || !parkingLotOptional.isPresent()) return null;
-
-        User user = userOptional.get();
-        ParkingLot parkingLot = parkingLotOptional.get();
-
-        Reservation reservation = new Reservation();
-
-        Spot spot = null;
-        int cost = Integer.MAX_VALUE;
+        List<Spot> potentialSpotList = new ArrayList<>();
         for (Spot sp : parkingLot.getSpotList())
             if (!sp.getOccupied()) {
-                int wheels = 0;
+                int wheels;
 
                 if (sp.getSpotType() == SpotType.TWO_WHEELER)
                     wheels = 2;
@@ -50,27 +44,23 @@ public class ReservationServiceImpl implements ReservationService {
                     wheels = Integer.MAX_VALUE;
 
                 if (wheels >= numberOfWheels) {
-                    int currentCost = sp.getPricePerHour() * timeInHours;
-
-                    if (currentCost < cost) {
-                        cost = currentCost;
-                        spot = sp;
-                    }
+                    potentialSpotList.add(sp);
                 }
             }
-        if (spot == null) return reservation;
+        if (potentialSpotList.isEmpty())
+            throw new Exception("Cannot maker reservation");
+
+        potentialSpotList.sort(Comparator.comparingInt(Spot::getPricePerHour));
+
+        Spot spot = potentialSpotList.getFirst();
         spot.setOccupied(true);
-        spot.getReservationList().add(reservation);
 
-        Payment payment = new Payment();
-        payment.setReservation(reservation);
-
-        user.getReservationList().add(reservation);
-
+        Reservation reservation = new Reservation();
         reservation.setNumberOfHours(timeInHours);
         reservation.setUser(user);
         reservation.setSpot(spot);
-        reservation.setPayment(payment);
+
+        user.getReservationList().add(reservation);
 
         userRepository3.save(user);
         spotRepository3.save(spot);
