@@ -35,7 +35,7 @@ public class ReservationServiceImpl implements ReservationService {
             return null;
         User user = userOptional.get();
 
-        ParkingLot parkingLot = parkingLotRepository3.findById(parkingLotId).orElseThrow(() -> new ReservationFailedException("Cannot make reservation"));
+        ParkingLot parkingLot = parkingLotRepository3.findById(parkingLotId).orElseThrow(() -> new ReservationFailedException("Can make reservation"));
 //        if (!parkingLotOptional.isPresent())
 ////            return null;
 //        ParkingLot parkingLot = parkingLotOptional.get();
