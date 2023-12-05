@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ReservationServiceImpl implements ReservationService {
@@ -28,9 +29,17 @@ public class ReservationServiceImpl implements ReservationService {
     ParkingLotRepository parkingLotRepository3;
 
     @Override
-    public Reservation reserveSpot(Integer userId, Integer parkingLotId, Integer timeInHours, Integer numberOfWheels) throws Exception {
-        User user = userRepository3.findById(userId).orElseThrow(() -> new ReservationFailedException("Invalid user id"));
-        ParkingLot parkingLot = parkingLotRepository3.findById(parkingLotId).orElseThrow(() -> new ReservationFailedException("Invalid parking lot Id"));
+    public Reservation reserveSpot(Integer userId, Integer parkingLotId, Integer timeInHours, Integer numberOfWheels) {
+        Optional<User> userOptional = userRepository3.findById(userId); //.orElseThrow(() -> new ReservationFailedException("Invalid user id"));
+        if (!userOptional.isPresent())
+            return null;
+        User user = userOptional.get();
+
+        Optional<ParkingLot> parkingLotOptional = parkingLotRepository3.findById(parkingLotId); //.orElseThrow(() -> new ReservationFailedException("Invalid parking lot Id"));
+        if (!parkingLotOptional.isPresent())
+            return null;
+        ParkingLot parkingLot = parkingLotOptional.get();
+
         Spot spot = null;
 
         SpotType spotType;
@@ -41,7 +50,8 @@ public class ReservationServiceImpl implements ReservationService {
         else if (numberOfWheels > 4)
             spotType = SpotType.OTHERS;
         else
-            throw new ReservationFailedException("Invalid vehicle");
+            return null;
+//            throw new ReservationFailedException("Invalid vehicle");
 
         List<Spot> spotList = parkingLot.getSpotList();
         spotList.sort(Comparator.comparingInt(Spot::getPricePerHour));
@@ -52,7 +62,8 @@ public class ReservationServiceImpl implements ReservationService {
                 break;
             }
         if (spot == null)
-            throw new ReservationFailedException("Suitable spot not found");
+            return null;
+//            throw new ReservationFailedException("Suitable spot not found");
 
         Reservation reservation = new Reservation();
 
