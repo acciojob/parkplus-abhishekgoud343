@@ -46,8 +46,9 @@ public class ReservationServiceImpl implements ReservationService {
         List<Spot> spotList = parkingLot.getSpotList();
         spotList.sort(Comparator.comparingInt(Spot::getPricePerHour));
         for (Spot sp : spotList)
-            if (sp.getSpotType() == spotType) {
+            if (sp.getSpotType() == spotType && !sp.getOccupied()) {
                 spot = sp;
+                spot.setOccupied(true);
                 break;
             }
         if (spot == null)
