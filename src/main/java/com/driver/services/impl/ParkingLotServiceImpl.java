@@ -27,13 +27,11 @@ public class ParkingLotServiceImpl implements ParkingLotService {
     }
 
     @Override
-    public Spot addSpot(int parkingLotId, Integer numberOfWheels, Integer pricePerHour) {
+    public Spot addSpot(int parkingLotId, Integer numberOfWheels, Integer pricePerHour) throws Exception {
         Spot spot = new Spot();
 
-        Optional<ParkingLot> parkingLot = parkingLotRepository1.findById(parkingLotId);
-        if (!parkingLot.isPresent())
-            return null;
-        spot.setParkingLot(parkingLot.get());
+        ParkingLot parkingLot = parkingLotRepository1.findById(parkingLotId).orElseThrow(() -> new Exception("Invalid parking lot id"));
+        spot.setParkingLot(parkingLot);
 
         if (numberOfWheels == 2)
             spot.setSpotType(SpotType.TWO_WHEELER);
