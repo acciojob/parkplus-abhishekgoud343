@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ReservationServiceImpl implements ReservationService {
@@ -26,14 +25,21 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public Reservation reserveSpot(Integer userId, Integer parkingLotId, Integer timeInHours, Integer numberOfWheels) throws Exception {
-        Optional<User> userOptional = userRepository3.findById(userId); //.orElseThrow(() -> new Exception("Cannot make reservation"));
-        Optional<ParkingLot> parkingLotOptional = parkingLotRepository3.findById(parkingLotId); //.orElseThrow(() -> new Exception("Cannot make reservation"));
-
-        if (!userOptional.isPresent() || !parkingLotOptional.isPresent())
+        ParkingLot parkingLot;
+        try {
+            parkingLot = parkingLotRepository3.findById(parkingLotId).get();
+        }
+        catch (Exception e){
             throw new Exception("Cannot make reservation");
+        }
 
-        User user = userOptional.get();
-        ParkingLot parkingLot = parkingLotOptional.get();
+        User user;
+        try {
+            user = userRepository3.findById(userId).get();
+        }
+        catch (Exception e){
+            throw new Exception("Cannot make reservation");
+        }
 
         List<Spot> potentialSpotList = new ArrayList<>();
         for (Spot sp : parkingLot.getSpotList())
