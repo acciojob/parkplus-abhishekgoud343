@@ -71,6 +71,7 @@ public class ReservationServiceImpl implements ReservationService {
         reservation.setPayment(payment);
 
         userRepository3.save(user);
+        spotRepository3.save(spot);
 
         return reservation;
     }
