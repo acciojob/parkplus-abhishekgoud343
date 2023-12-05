@@ -29,16 +29,16 @@ public class ReservationServiceImpl implements ReservationService {
     ParkingLotRepository parkingLotRepository3;
 
     @Override
-    public Reservation reserveSpot(Integer userId, Integer parkingLotId, Integer timeInHours, Integer numberOfWheels) {
+    public Reservation reserveSpot(Integer userId, Integer parkingLotId, Integer timeInHours, Integer numberOfWheels) throws ReservationFailedException {
         Optional<User> userOptional = userRepository3.findById(userId); //.orElseThrow(() -> new ReservationFailedException("Invalid user id"));
         if (!userOptional.isPresent())
             return null;
         User user = userOptional.get();
 
-        Optional<ParkingLot> parkingLotOptional = parkingLotRepository3.findById(parkingLotId); //.orElseThrow(() -> new ReservationFailedException("Invalid parking lot Id"));
-        if (!parkingLotOptional.isPresent())
-            return null;
-        ParkingLot parkingLot = parkingLotOptional.get();
+        ParkingLot parkingLot = parkingLotRepository3.findById(parkingLotId).orElseThrow(() -> new ReservationFailedException("Cannot make reservation"));
+//        if (!parkingLotOptional.isPresent())
+////            return null;
+//        ParkingLot parkingLot = parkingLotOptional.get();
 
         Spot spot = null;
 
