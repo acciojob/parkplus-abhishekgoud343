@@ -52,7 +52,7 @@ public class ReservationServiceImpl implements ReservationService {
 
         potentialSpotList.sort(Comparator.comparingInt(Spot::getPricePerHour));
 
-        Spot spot = potentialSpotList.getFirst();
+        Spot spot = potentialSpotList.get(0);
         spot.setOccupied(true);
 
         Reservation reservation = new Reservation();
