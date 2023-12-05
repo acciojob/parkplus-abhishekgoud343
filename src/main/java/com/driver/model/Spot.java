@@ -14,7 +14,7 @@ public class Spot {
 
     private int pricePerHour;
 
-    private boolean occupied;
+    private boolean occupied = false;
 
     @JoinColumn
     @ManyToOne

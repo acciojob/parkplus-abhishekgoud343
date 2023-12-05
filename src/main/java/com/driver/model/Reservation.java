@@ -11,8 +11,6 @@ public class Reservation {
 
     private int numberOfHours;
 
-    private int bill;
-
     @JoinColumn
     @ManyToOne
     private User user;
@@ -27,7 +25,6 @@ public class Reservation {
     public Reservation(Integer id, int numberOfHours, int bill, User user, Spot spot, Payment payment) {
         this.id = id;
         this.numberOfHours = numberOfHours;
-        this.bill = bill;
         this.user = user;
         this.spot = spot;
         this.payment = payment;
@@ -50,14 +47,6 @@ public class Reservation {
 
     public void setNumberOfHours(int numberOfHours) {
         this.numberOfHours = numberOfHours;
-    }
-
-    public int getBill() {
-        return bill;
-    }
-
-    public void setBill(int bill) {
-        this.bill = bill;
     }
 
     public User getUser() {

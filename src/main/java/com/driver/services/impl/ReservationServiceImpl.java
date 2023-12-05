@@ -1,6 +1,5 @@
 package com.driver.services.impl;
 
-import com.driver.exceptions.ReservationFailedException;
 import com.driver.model.*;
 import com.driver.repository.ParkingLotRepository;
 import com.driver.repository.ReservationRepository;
@@ -9,9 +8,6 @@ import com.driver.repository.UserRepository;
 import com.driver.services.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.Comparator;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -30,49 +26,52 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public Reservation reserveSpot(Integer userId, Integer parkingLotId, Integer timeInHours, Integer numberOfWheels) throws Exception {
-        Optional<User> userOptional = userRepository3.findById(userId); //.orElseThrow(() -> new ReservationFailedException("Invalid user id"));
-        if (!userOptional.isPresent())
-            return null;
+        Optional<User> userOptional = userRepository3.findById(userId);
+        Optional<ParkingLot> parkingLotOptional = parkingLotRepository3.findById(parkingLotId);
+
+        if (!userOptional.isPresent() || !parkingLotOptional.isPresent()) return null;
+
         User user = userOptional.get();
-
-        ParkingLot parkingLot = parkingLotRepository3.findById(parkingLotId).orElseThrow(() -> new Exception("Can make reservation"));
-//        if (!parkingLotOptional.isPresent())
-////            return null;
-//        ParkingLot parkingLot = parkingLotOptional.get();
-
-        Spot spot = null;
-
-        SpotType spotType;
-        if (numberOfWheels == 2)
-            spotType = SpotType.TWO_WHEELER;
-        else if (numberOfWheels == 4)
-            spotType = SpotType.FOUR_WHEELER;
-        else if (numberOfWheels > 4)
-            spotType = SpotType.OTHERS;
-        else
-            return null;
-//            throw new ReservationFailedException("Invalid vehicle");
-
-        List<Spot> spotList = parkingLot.getSpotList();
-        spotList.sort(Comparator.comparingInt(Spot::getPricePerHour));
-        for (Spot sp : spotList)
-            if (sp.getSpotType() == spotType && !sp.getOccupied()) {
-                spot = sp;
-                spot.setOccupied(true);
-                break;
-            }
-        if (spot == null)
-            return null;
-//            throw new ReservationFailedException("Suitable spot not found");
+        ParkingLot parkingLot = parkingLotOptional.get();
 
         Reservation reservation = new Reservation();
 
-        reservation.setUser(user);
-        reservation.setNumberOfHours(timeInHours);
-        reservation.setSpot(spot);
-        reservation.setPayment(new Payment());
-        reservation.setBill(spot.getPricePerHour() * timeInHours);
+        Spot spot = null;
+        int cost = Integer.MAX_VALUE;
+        for (Spot sp : parkingLot.getSpotList())
+            if (!sp.getOccupied()) {
+                int wheels = 0;
 
-        return reservationRepository3.save(reservation);
+                if (sp.getSpotType() == SpotType.TWO_WHEELER)
+                    wheels = 2;
+                else if (sp.getSpotType() == SpotType.FOUR_WHEELER)
+                    wheels = 4;
+                else
+                    wheels = Integer.MAX_VALUE;
+
+                if (wheels >= numberOfWheels) {
+                    int currentCost = sp.getPricePerHour() * timeInHours;
+
+                    if (currentCost < cost) {
+                        cost = currentCost;
+                        spot = sp;
+                    }
+                }
+            }
+        if (spot == null) return reservation;
+        spot.setOccupied(true);
+        spot.getReservationList().add(reservation);
+
+        Payment payment = new Payment();
+        payment.setReservation(reservation);
+
+        reservation.setNumberOfHours(timeInHours);
+        reservation.setUser(user);
+        reservation.setSpot(spot);
+        reservation.setPayment(payment);
+
+        userRepository3.save(user);
+
+        return reservation;
     }
 }
