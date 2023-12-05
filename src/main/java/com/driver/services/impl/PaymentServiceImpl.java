@@ -14,9 +14,6 @@ public class PaymentServiceImpl implements PaymentService {
     @Autowired
     ReservationRepository reservationRepository2;
 
-    @Autowired
-    PaymentRepository paymentRepository2;
-
     @Override
     public Payment pay(Integer reservationId, int amountSent, String mode) throws Exception {
         Reservation reservation = reservationRepository2.findById(reservationId).orElseThrow(() -> new Exception("Reservation not found"));

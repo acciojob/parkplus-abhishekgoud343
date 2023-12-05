@@ -20,16 +20,13 @@ public class ReservationServiceImpl implements ReservationService {
     @Autowired
     SpotRepository spotRepository3;
 
-//    @Autowired
-//    ReservationRepository reservationRepository3;
-
     @Autowired
     ParkingLotRepository parkingLotRepository3;
 
     @Override
     public Reservation reserveSpot(Integer userId, Integer parkingLotId, Integer timeInHours, Integer numberOfWheels) throws Exception {
         User user = userRepository3.findById(userId).orElseThrow(() -> new Exception("Cannot make reservation"));
-        ParkingLot parkingLot = parkingLotRepository3.findById(parkingLotId).orElseThrow(() -> new Exception("Cannot maker reservation"));
+        ParkingLot parkingLot = parkingLotRepository3.findById(parkingLotId).orElseThrow(() -> new Exception("Cannot make reservation"));
 
         List<Spot> potentialSpotList = new ArrayList<>();
         for (Spot sp : parkingLot.getSpotList())
@@ -48,7 +45,7 @@ public class ReservationServiceImpl implements ReservationService {
                 }
             }
         if (potentialSpotList.isEmpty())
-            throw new Exception("Cannot maker reservation");
+            throw new Exception("Cannot make reservation");
 
         potentialSpotList.sort(Comparator.comparingInt(Spot::getPricePerHour));
 
